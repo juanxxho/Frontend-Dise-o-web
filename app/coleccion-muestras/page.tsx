@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
@@ -20,7 +22,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/components/ui/use-toast"
-import { Camera, MapPin, Plus, Search } from "lucide-react"
+import { Camera, ImageIcon, MapPin, Plus, Search } from "lucide-react"
 import { useAppStore, generateId, formatDate } from "@/lib/store"
 
 export default function ColeccionMuestrasPage() {
@@ -35,6 +37,7 @@ export default function ColeccionMuestrasPage() {
   const [commonName, setCommonName] = useState("")
   const [location, setLocation] = useState("")
   const [observations, setObservations] = useState("")
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   const { state, dispatch } = useAppStore()
   const { samples, currentUser } = state
@@ -45,6 +48,17 @@ export default function ColeccionMuestrasPage() {
       sample.commonName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sample.id.toLowerCase().includes(searchTerm.toLowerCase()),
   )
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const handleRegisterSample = () => {
     if (!species || !commonName || !location) {
@@ -67,6 +81,7 @@ export default function ColeccionMuestrasPage() {
       type: speciesType,
       conservationStatus,
       observations,
+      image: previewImage || "/placeholder.svg?height=200&width=300",
     }
 
     dispatch({ type: "ADD_SAMPLE", payload: newSample })
@@ -83,6 +98,7 @@ export default function ColeccionMuestrasPage() {
     setCommonName("")
     setLocation("")
     setObservations("")
+    setPreviewImage(null)
     setOpenRegisterDialog(false)
   }
 
@@ -201,10 +217,47 @@ export default function ColeccionMuestrasPage() {
                     </div>
                     <div className="grid gap-2">
                       <Label>Fotografía</Label>
-                      <Button variant="outline" className="w-full justify-start gap-2">
-                        <Camera className="h-4 w-4" />
-                        Tomar Fotografía
-                      </Button>
+                      <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 rounded-md p-6 text-center">
+                        {previewImage ? (
+                          <div className="relative w-full aspect-video mb-2">
+                            <img
+                              src={previewImage || "/placeholder.svg"}
+                              alt="Vista previa"
+                              className="object-cover w-full h-full rounded-md"
+                            />
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              className="absolute top-2 right-2"
+                              onClick={() => setPreviewImage(null)}
+                            >
+                              Eliminar
+                            </Button>
+                          </div>
+                        ) : (
+                          <>
+                            <ImageIcon className="h-10 w-10 text-muted-foreground mb-2" />
+                            <p className="text-sm text-muted-foreground mb-2">
+                              Haga clic para seleccionar una fotografía
+                            </p>
+                          </>
+                        )}
+                        <div className="flex gap-2 w-full">
+                          <label className="w-full">
+                            <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                            <Button variant="secondary" className="w-full" asChild>
+                              <span>
+                                <ImageIcon className="mr-2 h-4 w-4" />
+                                Seleccionar Imagen
+                              </span>
+                            </Button>
+                          </label>
+                          <Button variant="secondary" className="w-full">
+                            <Camera className="mr-2 h-4 w-4" />
+                            Abrir Cámara
+                          </Button>
+                        </div>
+                      </div>
                     </div>
                   </div>
                   <DialogFooter>

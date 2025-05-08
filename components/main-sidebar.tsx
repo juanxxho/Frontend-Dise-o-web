@@ -63,6 +63,11 @@ export function MainSidebar({ role }: SidebarProps) {
           icon: FileText,
         },
         {
+          title: "Inventario",
+          href: "/inventario",
+          icon: PackageOpen,
+        },
+        {
           title: "Usuarios",
           href: "/usuarios",
           icon: Users,
@@ -108,7 +113,7 @@ export function MainSidebar({ role }: SidebarProps) {
         },
         {
           title: "Inventario de Equipos",
-          href: "/inventario-equipos",
+          href: "/inventario",
           icon: PackageOpen,
         },
         {

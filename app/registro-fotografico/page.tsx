@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState } from "react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { Button } from "@/components/ui/button"
@@ -30,9 +32,21 @@ export default function RegistroFotograficoPage() {
   const [photoType, setPhotoType] = useState("")
   const [photoLocation, setPhotoLocation] = useState("")
   const [photoNotes, setPhotoNotes] = useState("")
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
 
   const { state, dispatch } = useAppStore()
   const { photos, currentUser } = state
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
 
   const handleCapturePhoto = () => {
     if (!photoTitle || !photoType || !photoLocation) {
@@ -44,13 +58,22 @@ export default function RegistroFotograficoPage() {
       return
     }
 
+    if (!previewImage) {
+      toast({
+        title: "Error al registrar fotografía",
+        description: "Por favor seleccione o capture una fotografía",
+        variant: "destructive",
+      })
+      return
+    }
+
     const newPhoto = {
       id: generateId("FOTO"),
       title: photoTitle,
       location: photoLocation,
       date: formatDate(new Date()),
       photographer: currentUser?.name || "Usuario Actual",
-      thumbnail: "/placeholder.svg?height=200&width=300",
+      thumbnail: previewImage,
       type: photoType,
       notes: photoNotes,
     }
@@ -67,6 +90,7 @@ export default function RegistroFotograficoPage() {
     setPhotoType("")
     setPhotoLocation("")
     setPhotoNotes("")
+    setPreviewImage(null)
     setOpenCaptureDialog(false)
   }
 
@@ -141,12 +165,43 @@ export default function RegistroFotograficoPage() {
                 <div className="grid gap-2">
                   <Label>Fotografía</Label>
                   <div className="flex flex-col items-center justify-center border-2 border-dashed border-muted-foreground/25 rounded-md p-6 text-center">
-                    <ImageIcon className="h-10 w-10 text-muted-foreground mb-2" />
-                    <p className="text-sm text-muted-foreground mb-2">Haga clic para capturar una fotografía</p>
-                    <Button variant="secondary" className="w-full">
-                      <Camera className="mr-2 h-4 w-4" />
-                      Abrir Cámara
-                    </Button>
+                    {previewImage ? (
+                      <div className="relative w-full aspect-video mb-2">
+                        <img
+                          src={previewImage || "/placeholder.svg"}
+                          alt="Vista previa"
+                          className="object-cover w-full h-full rounded-md"
+                        />
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          className="absolute top-2 right-2"
+                          onClick={() => setPreviewImage(null)}
+                        >
+                          Eliminar
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <ImageIcon className="h-10 w-10 text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground mb-2">Haga clic para seleccionar una fotografía</p>
+                      </>
+                    )}
+                    <div className="flex gap-2 w-full">
+                      <label className="w-full">
+                        <input type="file" accept="image/*" className="hidden" onChange={handleImageChange} />
+                        <Button variant="secondary" className="w-full" asChild>
+                          <span>
+                            <ImageIcon className="mr-2 h-4 w-4" />
+                            Seleccionar Imagen
+                          </span>
+                        </Button>
+                      </label>
+                      <Button variant="secondary" className="w-full">
+                        <Camera className="mr-2 h-4 w-4" />
+                        Abrir Cámara
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

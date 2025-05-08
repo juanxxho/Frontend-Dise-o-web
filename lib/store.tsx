@@ -57,6 +57,7 @@ export type Sample = {
   type?: string
   conservationStatus?: string
   observations?: string
+  image?: string // URL o base64 de la imagen
 }
 
 export type Equipment = {
@@ -66,6 +67,9 @@ export type Equipment = {
   status: string
   assignedTo: string
   condition: string
+  notes?: string
+  acquisitionDate?: string
+  lastMaintenanceDate?: string
 }
 
 export type Issue = {
@@ -89,6 +93,7 @@ export type Photo = {
   thumbnail: string
   type?: string
   notes?: string
+  image?: string // URL o base64 de la imagen
 }
 
 export type Expert = {
@@ -141,6 +146,9 @@ type AppAction =
   | { type: "ADD_INVESTIGATION"; payload: Investigation }
   | { type: "ADD_USER"; payload: User }
   | { type: "ADD_OBSERVATION"; payload: Observation }
+  | { type: "ADD_EQUIPMENT"; payload: Equipment }
+  | { type: "UPDATE_EQUIPMENT_FULL"; payload: Equipment }
+  | { type: "DELETE_EQUIPMENT"; payload: { id: string } }
 
 // Contexto
 type AppContextType = {
@@ -389,6 +397,8 @@ const initialEquipment: Equipment[] = [
     status: "Funcional",
     assignedTo: "Juan Pérez",
     condition: "Bueno",
+    acquisitionDate: "15/01/2024",
+    lastMaintenanceDate: "10/04/2024",
   },
   {
     id: "EQ-002",
@@ -397,6 +407,8 @@ const initialEquipment: Equipment[] = [
     status: "Funcional",
     assignedTo: "Pedro Suárez",
     condition: "Bueno",
+    acquisitionDate: "20/01/2024",
+    lastMaintenanceDate: "05/04/2024",
   },
   {
     id: "EQ-003",
@@ -405,6 +417,8 @@ const initialEquipment: Equipment[] = [
     status: "Funcional",
     assignedTo: "María López",
     condition: "Bueno",
+    acquisitionDate: "10/02/2024",
+    lastMaintenanceDate: "01/04/2024",
   },
   {
     id: "EQ-004",
@@ -413,14 +427,18 @@ const initialEquipment: Equipment[] = [
     status: "Funcional",
     assignedTo: "Carlos Mendoza",
     condition: "Bueno",
+    acquisitionDate: "10/02/2024",
+    lastMaintenanceDate: "01/04/2024",
   },
   {
     id: "EQ-005",
     name: "Tablet Samsung Galaxy Tab",
     type: "Tablet",
     status: "Batería baja",
-    assignedTo: "Brigada (Compartido)",
+    assignedTo: "Brigada Amazonas (Compartido)",
     condition: "Regular",
+    acquisitionDate: "05/03/2024",
+    lastMaintenanceDate: "15/04/2024",
   },
 ]
 
@@ -664,6 +682,21 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...state,
         observations: [...state.observations, action.payload],
+      }
+    case "ADD_EQUIPMENT":
+      return {
+        ...state,
+        equipment: [...state.equipment, action.payload],
+      }
+    case "UPDATE_EQUIPMENT_FULL":
+      return {
+        ...state,
+        equipment: state.equipment.map((item) => (item.id === action.payload.id ? { ...action.payload } : item)),
+      }
+    case "DELETE_EQUIPMENT":
+      return {
+        ...state,
+        equipment: state.equipment.filter((item) => item.id !== action.payload.id),
       }
     default:
       return state
